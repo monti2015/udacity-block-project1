@@ -124,9 +124,10 @@ class BlockchainController {
         this.app.get("/validateChain", async (req, res) => {
             let errorLog = await this.blockchain.validateChain();
             if (errorLog.length !== 0) {
-                reject("The chain has been tampering or something wrong")
+                return res.status(404).send("Invalid block found!");
+            } else {
+                return res.status(200).send("All blocks are valid!");
             }
-
         });
     }
 }

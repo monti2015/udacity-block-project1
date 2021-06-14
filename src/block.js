@@ -46,8 +46,10 @@ class Block {
             // Returning the Block is valid
             try {
                 const currentHash = self.hash;
+                console.log(`Current hash => ${currentHash}`);
                 self.hash = null;
                 const newHash = SHA256(JSON.stringify(self)).toString();
+                console.log(`New hash => ${newHash}`);
                 self.hash = currentHash;
                 resolve(currentHash === newHash);
             } catch (error) {
