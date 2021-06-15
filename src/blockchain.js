@@ -54,7 +54,7 @@ class Blockchain {
      * @param {*} block 
      * The method will return a Promise that will resolve with the block added
      * or reject if an error happen during the execution.
-     * You will need to check for the height to assign the `previousBlockHash`,
+     * You will need to check for the height to assign the `nextBlockHash`,
      * assign the `timestamp` and the correct `height`...At the end you need to 
      * create the `block hash` and push the block into the chain array. Don't for get 
      * to update the `this.height`
@@ -66,24 +66,36 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             const errorLog = await self.validateChain();
             if (errorLog.length !== 0) {
+                // Validate chain whether the block is compromised and compares blockhash.
+                //
                 reject("The chain has been compromised.");
             } else {
                 try {
-                    const currentHeight = await self.getChainHeight();
-                    block.time = new Date().getTime().toString().slice(0, -3);
-                    block.height = currentHeight + 1;
+                    let currentHeight = await self.getChainHeight();
+                    if (currentHeight === -1) {
+                        //Set Genesis block height to 1
+                        block.height = 1;
+                    }
 
                     if (currentHeight > 0) {
-                        const previousBlock = await self.getBlockByHeight(self.height);
+                        //Since it is not genesis block, 
+                        //Then add previousBlockHash field which is from previous 
+                        //block hash.
+                        block.height = currentHeight + 1;
+                        const previousBlock = await self.getBlockByHeight(currentHeight);
+                        //console.log(previousBlock);
                         block.previousBlockHash = previousBlock.hash;
                     }
 
+                    block.time = new Date().getTime().toString().slice(0, -3);
                     block.hash = SHA256(JSON.stringify(block)).toString();
                     this.chain.push(block);
                     this.height = block.height;
+                    //console.log(block);
 
                     resolve(block);
                 } catch (error) {
+                    //console.log(error);
                     reject('Adding block failed')
                 }
             }
@@ -202,16 +214,32 @@ class Blockchain {
      * This method will return a Promise that will resolve with the list of errors when validating the chain.
      * Steps to validate:
      * 1. You should validate each block using `validateBlock`
-     * 2. Each Block should check the with the previousBlockHash
+     * 2. Each Block should check the with the nextBlockHash
      */
     validateChain() {
         let self = this;
+        //console.log(self);
         let errorLog = [];
+        // let count = -1;
+        // let numOfBlock = self.chain.length - 1;
         return new Promise(async (resolve, reject) => {
             self.chain.forEach(async (b) => {
                 const isValidBlock = await b.validate();
                 if (!isValidBlock) {
                     errorLog.push({ error: 'Compromised!' });
+                }
+
+                //Validate blockHash with previousblockHash
+                let nextBlock = await self.getBlockByHeight((b.height) + 1);
+                if (self.height == -1 || nextBlock === null) {
+                    //Skip, Nothing to validate;
+                } else {
+                    //console.log(b.hash);
+                    //console.log(nextBlock.previousBlockHash);
+                    if (b.hash !== nextBlock.previousBlockHash) {
+                        console.log("Found error");
+                        errorLog.push({ error: 'Compromised!' });
+                    }
                 }
             });
             resolve(errorLog);
