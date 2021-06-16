@@ -73,11 +73,11 @@ class Blockchain {
                 try {
                     let currentHeight = await self.getChainHeight();
                     if (currentHeight === -1) {
-                        //Set Genesis block height to 1
-                        block.height = 1;
+                        //Set Genesis block height to 0
+                        block.height = 0;
                     }
 
-                    if (currentHeight > 0) {
+                    if (currentHeight >= 0) {
                         //Since it is not genesis block, 
                         //Then add previousBlockHash field which is from previous 
                         //block hash.

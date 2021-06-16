@@ -45,11 +45,15 @@ class Block {
             // Returning the Block is not valid
             // Returning the Block is valid
             try {
-                const currentHash = self.hash;
-                self.hash = null;
-                const newHash = SHA256(JSON.stringify(self)).toString();
-                self.hash = currentHash;
-                resolve(currentHash === newHash);
+                // const currentHash = self.hash;
+                // self.hash = null;
+                // const newHash = SHA256(JSON.stringify(self)).toString();
+                // self.hash = currentHash;
+                // resolve(currentHash === newHash);
+                const copyBlock = { ...self };
+                copyBlock.hash = null;
+                const newHash = SHA256(JSON.stringify(copyBlock)).toString();
+                resolve(self.hash === newHash);
             } catch (error) {
                 reject(new Error(error));
             };
